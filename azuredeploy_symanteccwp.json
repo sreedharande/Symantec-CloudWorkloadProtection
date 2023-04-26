@@ -214,7 +214,7 @@
 						"LAURI": "[variables('LogAnaltyicsUri')]",
 						"EventTypeFilters": "[parameters('EventTypeFilters')]",
                         "ServerURL":"[parameters('ServerURL')]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-AzFunAWSCloudTrailLogsIngestion-functionapp"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/sreedharande/Symantec-CloudWorkloadProtection/raw/main/AzFunSymantecCWP.zip"
                     }
                 }
             ]

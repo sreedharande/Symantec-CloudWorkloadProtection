@@ -4,7 +4,7 @@ Microsoft Sentinel Data connector to ingest Symantec Cloud Workload Protection (
 ## Installation / Setup Guide
 
 1. Click  Deploy To Azure/Deploy to Azure Gov  
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsreedharande%2FSymantec-CloudWorkloadProtection%2Fmain%2Fazuredeploy_symanteccwp.json)
 
 
 
@@ -30,9 +30,9 @@ Microsoft Sentinel Data connector to ingest Symantec Cloud Workload Protection (
 2. Parameterized Symantec Cloud Workload Protection event duration using environment variable "FreshEventTimeStamp". Value must be in minutes.  
    **Note**  
    Azure Function trigger schedule and FreshEventTimeStamp
-   Ex: If you want to trigger function every 30 min then values must be
-   FreshEventTimeStamp=30
-   Schedule=0 */30 * * * *
+   Ex: If you want to trigger function every 30 min then values must be  
+   FreshEventTimeStamp=10  
+   Schedule=0 */10 * * * *
       
 4. ClientID, ClientSecret and Workspace Key will be placed as "Secrets" in the Azure KeyVault `<<functionappname>><<uniqueid>>` with only Azure Function access policy. If you want to see/update these secrets,
 
