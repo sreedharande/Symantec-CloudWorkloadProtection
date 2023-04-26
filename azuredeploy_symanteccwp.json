@@ -28,7 +28,7 @@
 			}
         },
         "CustomerID": {
-            "type": "securestring",            
+            "type": "string",            
 			"metadata": {
 				"description": "Specifies CustomerID."
 			}
