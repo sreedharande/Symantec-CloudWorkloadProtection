@@ -40,6 +40,7 @@ if(not match):
 
 
 collection_schedule = int(fresh_event_timestamp)
+page_size = int(page_size)
 
 authHeaders = {'Content-type':'application/json'}
 authRequest = {}
@@ -105,7 +106,7 @@ def main(mytimer: func.TimerRequest) -> None:
                 logging.error("Get events API is failed")
                 scwpEventsResponse.raise_for_status()
             else:
-                logging.error("Get Events API is successful")
+                logging.info("Get Events API is successful")
 
             scwpEventsJson = scwpEventsResponse.json()
             scwpEvents = scwpEventsJson['result']
@@ -113,7 +114,7 @@ def main(mytimer: func.TimerRequest) -> None:
             if totalScwpEvents == 0:
                 break 
 
-            logging.info('Total number of files is {}'.format(len(totalScwpEvents))) 
+            logging.info('Total number of CWP Events {}'.format(totalScwpEvents)) 
             failed_sent_events_number = 0
             successfull_sent_events_number = 0
             file_events = 0
