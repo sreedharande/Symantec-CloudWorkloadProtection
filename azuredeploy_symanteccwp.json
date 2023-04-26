@@ -210,6 +210,7 @@
                         "LogAnalyticsCustomLogName":"[parameters('LogAnalyticsCustomLogName')]",
 						"Schedule":"0 */10 * * * *",
 						"FreshEventTimeStamp":"10",
+                        "PageSize":"100",
 						"LAURI": "[variables('LogAnaltyicsUri')]",
 						"EventTypeFilters": "[parameters('EventTypeFilters')]",
                         "ServerURL":"[parameters('ServerURL')]",

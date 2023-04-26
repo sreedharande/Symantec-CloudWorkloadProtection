@@ -48,87 +48,96 @@ eventDatetime = ''
 getScwpEventsRequest = {'pageSize':page_size, 'order':'ASCENDING','displayLabels':'false','searchFilter':{}}
 
 def authenticate(scwpAuthUrl):
-        for retry in range(retry_count):
-                authRequestJson = json.dumps(authRequest)
-                authResponse = requests.post(scwpAuthUrl, data=authRequestJson, headers=authHeaders, verify=False)
-                if authResponse.status_code != requests.codes.ok:
-                        if retry >= retry_count:
-                                authResponse.raise_for_status()
-                        time.sleep(retry * 60)
-                        continue
-                else:
-                        break
-        accessToken = authResponse.json()['access_token']
-        authHeaders['Authorization'] = 'Bearer ' + accessToken
+    for retry in range(retry_count):
+        authRequestJson = json.dumps(authRequest)
+        authResponse = requests.post(scwpAuthUrl, data=authRequestJson, headers=authHeaders, verify=False)
+        if authResponse.status_code != requests.codes.ok:
+            if retry >= retry_count:
+                authResponse.raise_for_status()
+                time.sleep(retry * 60)
+                continue
+            else:
+                break
+    accessToken = authResponse.json()['access_token']
+    authHeaders['Authorization'] = 'Bearer ' + accessToken
 
 
 def main(mytimer: func.TimerRequest) -> None:
-        if mytimer.past_due:
-             logging.info('The timer is past due!')
+    if mytimer.past_due:
+        logging.info('The timer is past due!')
 
-        logging.info('Starting program')
-        try:
-             scwpAuthUrl = serverURL + '/dcs-service/dcscloud/v1/oauth/tokens'
-             getScwpEventsUrl = serverURL + '/dcs-service/dcscloud/v1/event/query'
-             authHeaders['x-epmp-customer-id'] = customerID
-             authHeaders['x-epmp-domain-id'] = domainID
-             authRequest['client_id'] = clientID
-             authRequest['client_secret'] = clientsecret
-             startDate = (datetime.today() - timedelta(minutes=collection_schedule)).isoformat()
-             if (startDate is None) or (startDate == ""):
-                startDate = (datetime.today() - timedelta(minutes=10)).isoformat()
-             else:
-                if startDate.endswith('Z'):
-                        startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(milliseconds=1)).isoformat()
-                else:
-                        startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(milliseconds=1)).isoformat()
+    logging.info('Starting program')
 
-             eventTypes = eventtypefilter.strip().split(',')
-             eventTypesWithQuotes = ','.join('\"{0}\"'.format(eventType) for eventType in eventTypes)
-             eventTypeFilter = 'type_class IN [' + eventTypesWithQuotes + ']'
-             getScwpEventsRequest['startDate'] = startDate
-             getScwpEventsRequest['endDate'] = datetime.now().isoformat()
-             getScwpEventsRequest['additionalFilters'] = eventTypeFilter
-        
-             pageNumber = 0
-             while True:
-                getScwpEventsRequest['pageNumber'] = pageNumber
-                getScwpEventsRequestJson = json.dumps(getScwpEventsRequest)
+    try:
+        scwpAuthUrl = serverURL + '/dcs-service/dcscloud/v1/oauth/tokens'
+        getScwpEventsUrl = serverURL + '/dcs-service/dcscloud/v1/event/query'
+        authHeaders['x-epmp-customer-id'] = customerID
+        authHeaders['x-epmp-domain-id'] = domainID
+        authRequest['client_id'] = clientID
+        authRequest['client_secret'] = clientsecret
+        startDate = (datetime.today() - timedelta(minutes=collection_schedule)).isoformat()
+        if (startDate is None) or (startDate == ""):
+            startDate = (datetime.today() - timedelta(minutes=10)).isoformat()
+        else:
+            if startDate.endswith('Z'):
+                    startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(milliseconds=1)).isoformat()
+            else:
+                    startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(milliseconds=1)).isoformat()
+
+        eventTypes = eventtypefilter.strip().split(',')
+        eventTypesWithQuotes = ','.join('\"{0}\"'.format(eventType) for eventType in eventTypes)
+        eventTypeFilter = 'type_class IN [' + eventTypesWithQuotes + ']'
+        getScwpEventsRequest['startDate'] = startDate
+        getScwpEventsRequest['endDate'] = datetime.now().isoformat()
+        getScwpEventsRequest['additionalFilters'] = eventTypeFilter
+    
+        pageNumber = 0
+        while True:
+            getScwpEventsRequest['pageNumber'] = pageNumber
+            getScwpEventsRequestJson = json.dumps(getScwpEventsRequest)
+            scwpEventsResponse = requests.post(getScwpEventsUrl, data=getScwpEventsRequestJson, headers=authHeaders, verify=False)
+
+            if scwpEventsResponse.status_code == 401:
+                authenticate(scwpAuthUrl)
                 scwpEventsResponse = requests.post(getScwpEventsUrl, data=getScwpEventsRequestJson, headers=authHeaders, verify=False)
 
-                if scwpEventsResponse.status_code == 401:
-                    authenticate(scwpAuthUrl)
-                    scwpEventsResponse = requests.post(getScwpEventsUrl, data=getScwpEventsRequestJson, headers=authHeaders, verify=False)
+            if scwpEventsResponse.status_code != requests.codes.ok:
+                logging.error("Get events API is failed")
+                scwpEventsResponse.raise_for_status()
+            else:
+                logging.error("Get Events API is successful")
 
-                if scwpEventsResponse.status_code != requests.codes.ok:
-                    print ("Get events API is failed")
-                    scwpEventsResponse.raise_for_status()
-                else:
-                    print ("Get Events API is successful")
+            scwpEventsJson = scwpEventsResponse.json()
+            scwpEvents = scwpEventsJson['result']
+            totalScwpEvents = scwpEventsJson['total']
+            if totalScwpEvents == 0:
+                break 
 
-                scwpEventsJson = scwpEventsResponse.json()
-                scwpEvents = scwpEventsJson['result']
-                totalScwpEvents = scwpEventsJson['total']
-                if totalScwpEvents == 0:
-                     break 
+            logging.info('Total number of files is {}'.format(len(totalScwpEvents))) 
+            failed_sent_events_number = 0
+            successfull_sent_events_number = 0
+            file_events = 0
 
-                logging.info('Total number of files is {}'.format(len(totalScwpEvents))) 
-                failed_sent_events_number = 0
-                successfull_sent_events_number = 0
-                file_events = 0
+            for event in scwpEvents:
+                sentinel = AzureSentinelConnector(logAnalyticsUri, sentinel_customer_id, sentinel_shared_key, sentinel_log_type, queue_size=10000, bulks_number=10)
+                with sentinel:
+                    sentinel.send(event)
+                file_events += 1 
+                failed_sent_events_number += sentinel.failed_sent_events_number
+                successfull_sent_events_number += sentinel.successfull_sent_events_number
+            
+            if failed_sent_events_number:
+                logging.info('{} Symantec CWP Events have not been sent'.format(failed_sent_events_number))
 
-                for event in scwpEvents:
-                        sentinel = AzureSentinelConnector(logAnalyticsUri, sentinel_customer_id, sentinel_shared_key, sentinel_log_type, queue_size=10000, bulks_number=10)
-                        with sentinel:
-                                sentinel.send(event)
-                        file_events += 1 
-                        failed_sent_events_number += sentinel.failed_sent_events_number
-                        successfull_sent_events_number += sentinel.successfull_sent_events_number
+            if successfull_sent_events_number:
+                logging.info('Program finished. {} Symantec CWP Events have been sent.'.format(successfull_sent_events_number))
 
-                pageNumber += 1
-        except Exception as err:
-                logging.error('Error while getting objects list - {}'.format(err))
-                raise Exception
+            if successfull_sent_events_number == 0 and failed_sent_events_number == 0:
+                logging.info('No Fresh Symantec CWP Events')
+            pageNumber += 1
+    except Exception as err:
+        logging.error('Error while getting objects list - {}'.format(err))
+        raise Exception
 
 class AzureSentinelConnector:
     def __init__(self, log_analytics_uri, customer_id, shared_key, log_type, queue_size=200, bulks_number=10, queue_size_bytes=25 * (2**20)):
