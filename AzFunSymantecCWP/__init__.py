@@ -1,6 +1,6 @@
 import json
 import requests
-from datetime import datetime, timedelta
+import timedelta
 import time
 import os
 import urllib3
@@ -12,6 +12,7 @@ import base64
 import re
 from threading import Thread
 from io import StringIO
+from datetime import datetime, timedelta
 from dateutil.parser import parse
 import azure.functions as func
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -202,14 +203,11 @@ class AzureSentinelConnector:
 
     def _post_data(self, customer_id, shared_key, body, log_type):
         events_number = len(body)
-        body = json.dumps(body)
-        body = re.sub(r'\\', '', body)
-        body = re.sub(r'"{', '{', body)
-        body = re.sub(r'}"', '}', body)
+        body = json.dumps(body)        
         method = 'POST'
         content_type = 'application/json'
         resource = '/api/logs'
-        rfc1123date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        rfc1123date = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         content_length = len(body)
         signature = self._build_signature(customer_id, shared_key, rfc1123date, content_length, method, content_type, resource)
         uri = self.log_analytics_uri + resource + '?api-version=2016-04-01'
