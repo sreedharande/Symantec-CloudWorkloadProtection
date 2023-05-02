@@ -27,7 +27,7 @@ clientID = os.environ.get('ClientID')
 clientsecret = os.environ.get('ClientSecret')
 eventtypefilter = os.environ.get('EventTypeFilters')
 
-if ((logAnalyticsUri in (None, '') or str(logAnalyticsUri).isspace())):    
+if ((logAnalyticsUri in (None, '') or str(logAnalyticsUri).isspace())):
     logAnalyticsUri = 'https://' + sentinel_customer_id + '.ods.opinsights.azure.com'
 
 pattern = r'https:\/\/([\w\-]+)\.ods\.opinsights\.azure.([a-zA-Z\.]+)$'
@@ -74,13 +74,14 @@ def main(mytimer: func.TimerRequest) -> None:
         authRequest['client_id'] = clientID
         authRequest['client_secret'] = clientsecret
         startDate = (datetime.datetime.today() - datetime.timedelta(minutes=collection_schedule)).isoformat()
+        
         if (startDate is None) or (startDate == ""):
-            startDate = (datetime.datetime.today() - datetime.timedelta(minutes=10)).isoformat()
+            startDate = (datetime.datetime.today() - datetime.timedelta(minutes=collection_schedule)).isoformat()
         else:
             if startDate.endswith('Z'):
-                    startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(milliseconds=1)).isoformat()
+                startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(milliseconds=1)).isoformat()
             else:
-                    startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + datetime.timedelta(milliseconds=1)).isoformat()
+                startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + datetime.timedelta(milliseconds=1)).isoformat()
 
         eventTypes = eventtypefilter.strip().split(',')
         eventTypesWithQuotes = ','.join('\"{0}\"'.format(eventType) for eventType in eventTypes)
@@ -217,10 +218,10 @@ class AzureSentinelConnector:
 
         response = requests.post(uri, data=body, headers=headers)
         if (response.status_code >= 200 and response.status_code <= 299):
-            logging.info('{} events have been successfully sent to Azure Sentinel'.format(events_number))
+            logging.info('{} events have been successfully sent to Microsoft Sentinel'.format(events_number))
             self.successfull_sent_events_number += events_number
         else:
-            logging.error("Error during sending events to Azure Sentinel. Response code: {}".format(response.status_code))
+            logging.error("Error during sending events to Microsoft Sentinel. Response code: {}".format(response.status_code))
             self.failed_sent_events_number += events_number
 
     def _check_size(self, queue):
