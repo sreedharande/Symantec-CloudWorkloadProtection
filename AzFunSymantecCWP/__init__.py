@@ -1,21 +1,15 @@
-import json
 import requests
-import datetime
-import timedelta
-import time
 import os
-import urllib3
+import datetime
 import logging
+import time
 import json
 import hashlib
 import hmac
 import base64
 import re
+import urllib3
 from threading import Thread
-from io import StringIO
-from datetime import datetime, timedelta
-from dateutil.parser import parse
-import azure.functions as func
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sentinel_customer_id = os.environ.get('WorkspaceID')
@@ -78,20 +72,20 @@ def main(mytimer: func.TimerRequest) -> None:
         authHeaders['x-epmp-domain-id'] = domainID
         authRequest['client_id'] = clientID
         authRequest['client_secret'] = clientsecret
-        startDate = (datetime.today() - timedelta(minutes=collection_schedule)).isoformat()
+        startDate = (datetime.datetime.today() - datetime.timedelta(minutes=collection_schedule)).isoformat()
         if (startDate is None) or (startDate == ""):
-            startDate = (datetime.today() - timedelta(minutes=10)).isoformat()
+            startDate = (datetime.datetime.today() - datetime.timedelta(minutes=10)).isoformat()
         else:
             if startDate.endswith('Z'):
-                    startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + timedelta(milliseconds=1)).isoformat()
+                    startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(milliseconds=1)).isoformat()
             else:
-                    startDate = (datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(milliseconds=1)).isoformat()
+                    startDate = (datetime.datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + datetime.timedelta(milliseconds=1)).isoformat()
 
         eventTypes = eventtypefilter.strip().split(',')
         eventTypesWithQuotes = ','.join('\"{0}\"'.format(eventType) for eventType in eventTypes)
         eventTypeFilter = 'type_class IN [' + eventTypesWithQuotes + ']'
         getScwpEventsRequest['startDate'] = startDate
-        getScwpEventsRequest['endDate'] = datetime.now().isoformat()
+        getScwpEventsRequest['endDate'] = datetime.datetime.now().isoformat()
         getScwpEventsRequest['additionalFilters'] = eventTypeFilter
     
         pageNumber = 0
@@ -208,7 +202,7 @@ class AzureSentinelConnector:
         method = 'POST'
         content_type = 'application/json'
         resource = '/api/logs'
-        rfc1123date = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        rfc1123date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         content_length = len(body)
         signature = self._build_signature(customer_id, shared_key, rfc1123date, content_length, method, content_type, resource)
         uri = self.log_analytics_uri + resource + '?api-version=2016-04-01'
