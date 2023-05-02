@@ -10,6 +10,7 @@ import base64
 import re
 import urllib3
 from threading import Thread
+import azure.functions as func
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sentinel_customer_id = os.environ.get('WorkspaceID')
